@@ -1,0 +1,539 @@
+---
+title: "Book displays recommendation for Flourish and Blotts Bookshop"
+author: "Raju Penmetcha"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+# Overview 
+
+There are many types of bookshop customers, ranging from the casual browser, the student looking for a specific course text book, book club members looking for their reading list, and seasonal book readers based on trends. They are all different but they have one thing in common; if their eyes are drawn to an outstanding display with popular and high moving books they will stop and look and buy. It is critical to book shop like Flourish and Blotts to understand customer preferences, frequently read books and other similar books they likely would purchase. This provides bookshop managers to place display cases strategically to increase sales and profitability to the bookshop.
+
+Following analysis uses Frequent Pattern Analysis (FPA) analysis to provide recommendation to  store manger at Flourish and Blotts. 
+
+
+![](https://images.gr-assets.com/books/1386699861s/18079776.jpg)
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+
+# R Packages
+
+The packages you will need to install for the week are **Matrix**, **arules** and **arulesViz**.
+
+
+
+# Purpose for the analysis 
+
+The manager of **Flourish and Blotts** bookstore is trying to decide the best ways to arrange the book displays for the upcoming summer season in order to increase sales. 
+
+The requirement is to analyze *90,000 plus* historical sales transactions and identify following recommendation for the book store. 
+
+  * **What are the bestselling book titles at Flourish and Blotts.**
+  
+  * **What book title should be displayed strategically to increase sales to book club members like Oprah's book club.**
+  
+  * **Recommend other book titles to display on the book cases that are appealing to the customers and would increase sales at the store, in this recommendation exclude "Girls with the Dragon Tattoo" and "Wild Animus" title series.**
+
+
+
+# Frequent Pattern Analysis (Association Rule Mining)
+
+**frequent pattern analysis (FPA)**.
+
+Applications of FPA include analyses of market basket, DNA sequence, click stream analysis, and marketing activities (sale campaign; cross-marketing; etc.). We are going to examine two FPA algorithms: **Apriori** and **ECLAT**. **Apriori** is the more popular algorithm, but it can take up a lot of computational resources. **ECLAT** is a more efficient algorithm (i.e. faster) on smaller datasets.   
+
+FPA provides results in a set of association rules. A typical association rule would state that given itemset X, then itemset Y is likely to occur. For example, {diaper} -> {beer}. Customers who purchase diapers are likely to purchase beer. 
+
+Association rules are determined based on two quality measures: **support** and **confidence**.
+
+```
+Support: How often does the rule happen?
+```
+
+Agrawal, Imielinski, and Swami (1993) noted that support is equivalent to the concept of "statistical significance." The calculation is already discussed above.
+
+```
+Confidence: How often is the rule correct? 
+```
+Agrawal, Imielinski, and Swami (1993) said confidence is the "rule's strength." 
+
+Confidence is calculated as follows:
+
+```
+confidence(X->Y)=(support(X,Y))/(support(X))
+```
+
+# The Dataset 
+
+The *Flourish and Blotts* dataset contains *92,108* transactions containing *220,447* items(books) purchased at the store. 
+
+Load transaction dataset into workspace for analysis  
+
+
+```{r}
+getwd()
+setwd("C:/Users/Jupiter/Downloads/RU/BIA6301ADM/Homework/submission/week4/ADM_Wekk4_Project/data")
+
+library(Matrix)
+library(arules) 
+bookbaskets <- read.transactions("bookdata.tsv.gz", format="single",  	# Note: 2 
+                                 sep="\t",                    	# Note: 3 
+                                 cols=c("userid", "title"),    	# Note: 4 
+                                 rm.duplicates=T)       	# Note: 5
+
+
+```
+
+
+# Exploratory Data Analysis
+
+Explore the dataset structure and item aggregate details to understand the frequently occurring book titles, etc.
+
+
+```{r}
+
+# Summary of the dataset
+summary(bookbaskets)
+
+
+# Examine the first five transactions
+inspect(bookbaskets[1:5]) 
+
+# Calculate number of books purchased by "userID"
+basketSizes<-size(bookbaskets) 
+View(basketSizes[1:20])
+
+# Calculate the support for each book title or frequently purchased book
+bookFreq_relative <-itemFrequency(bookbaskets, type = "relative" ) 
+View(bookFreq_relative[1:10])
+
+ # Get the absolute count of book occurrences. 
+bookFreq_absolute <-itemFrequency(bookbaskets, type = "absolute" ) 
+#bookFreq_absolute <- (bookFreq/sum(bookFreq))*sum(basketSizes)
+View(bookFreq_absolute[1:10])
+str(bookFreq_absolute)
+bookFreq_absolute_tbl <- table(bookFreq_absolute)
+bookFreq_absolute_tbl
+str(bookFreq_absolute_tbl)
+
+#Only keep transactions with more than one book purchased. 
+bookbasket_gt1 <- bookbaskets[basketSizes>1] 
+
+bookbasket_gt1[1:10]
+summary(bookbasket_gt1)
+
+####
+```
+
+
+## Visualizing the bookbasket data with frequently purchased book titles
+
+```{r}
+
+itemFrequencyPlot(bookbaskets, topN = 10, type = "absolute", main = "Overall Top 10 Best Seelling Titles") 
+```
+
+## Best Selling Book Results:
+### Based on whole transaction population the bestselling or very frequently purchased titles are:
+
+ 1. Wild Animus 
+ 2. The Lovely Bones: A Novel 
+ 3. She's Come Undone 
+ 4. The Da Vinci Code 
+ 5. Harry Potter and the Sorcerer's Stone 
+ 6. The Nanny Diaries: A Novel 
+ 7. A Painted House
+ 8. Bridget Jones's Diary
+ 9. The Secret Life of Bees
+ 10.Divine Secrets of the Ya-Ya Sisterhood: A Novel
+ 
+These results are based on book titles purchases made frequently across the population plotted using the above graph of top 10 titles.
+
+
+
+
+# Analyze and recommend titles to display on cases for book club members’ preference
+
+### since typical book club members are who is reading titles featured by Oprah book club, following steps would extract Oprah's book list titles from the website http://www.oprah.com/app/books.html.
+
+![](http://static.oprah.com/images/o2/201403/obc-complete-list-949x534.jpg)
+
+
+* Extracted Oprah book club book list (72 count) from the website as csv file. Data contains book title and author name. 
+
+* Removed non-relevant items(columns) from the dataset.
+
+* Following steps will load the Oprah book club list into workspace for analysis.
+
+
+```{r}
+library(readr)
+
+Oprah_booklist <- read_csv("C:/Users/Jupiter/Downloads/RU/BIA6301ADM/Homework/submission/week4/ADM_Wekk4_Project/data/Oprah_bookshelf_list.csv")
+#View(Oprah_booklist)
+#typeof(Oprah_booklist)
+
+#rm(Oprah_booktitles)
+Oprah_booktitles <- Oprah_booklist$title
+#typeof(Oprah_booklist_title)
+Oprah_booktitles[1:10]
+
+```
+
+
+Some of the bookclub titles extracted from the website are not in the bookbasket population, therefore, removed not found book titles from the Oprah bookclub list for better comparison and analysis. 
+
+
+```{r} 
+
+rm(Oprah_booktitles_sel)
+
+Oprah_booktitles_sel <- list()
+
+j <- 1
+
+for(i in 1:72) {
+       tryCatch(
+                {
+                    which(bookbasket_gt1 %in% c(Oprah_booktitles[c(i)]))
+                  
+                    Oprah_booktitles_sel[j] <-  Oprah_booktitles[c(i)]
+                  
+                    j <- j + 1},
+                  
+                  
+                error = function(e) {print(paste("Error Not Found - ", Oprah_booktitles[c(i)]));
+                                      }
+                  )
+}
+
+
+Oprah_booktitles_sel
+
+
+```
+
+
+### Run apriori for the selected bookclub titles and inspect top 20 likely books purchased by customers
+
+### Using following parameter settings for bookclub rules
+support = 0.001 (or .10%)
+confidence = 0.10 (or 10%)
+maxlen = maximum number of items in a rule. Default is 10.
+minlen = minimum number of items in a rule. Default is 1.
+
+Used Appearance argument of the apriori to restrict on the associations mined by apriori. 
+
+
+```{r}
+
+rm(bookclubrules)
+bookclubrules <- apriori(bookbaskets, parameter = list(support =
+                          0.001, confidence = 0.10, minlen = 1),
+                          appearance = list(both = c(Oprah_booktitles_sel),
+                                            default="lhs")) 
+
+
+```
+
+### Let's look at "Lift" for book title recommendations. 
+
+In the context of our current analysis, lift measures "how much more likely an item is to be purchased relative to its typical purchase rate, given that you know another item has been purchased" (Lantz 2013, p. 261).
+
+For example:
+```
+Lift (honey --> whole milk) = Confidence (honey --> whole milk)/Support (whole milk)
+
+Confidence (honey --> whole milk) = 0.7333
+
+Support (whole milk) = 0.2556. 
+
+Lift = 0.4108/0.2556 = 2.87
+```
+
+
+## Improving Performance
+
+Let's sort the rules by lift.
+
+```{r}
+
+inspect(head(sort(bookclubrules, by = "lift"),20))
+
+```
+
+## Book Club Results:
+### Based on above analysis placing following book titles on book club related book cases in the store would appeal to the book club members and improve sales to those customers. This can be replicated to other book club lists to place titles on the cases for targeted sales increase at the store.
+
+The following selected book titles should be displayed together at book club members display area, this list is derived based on the Oprah's book club recommended list.
+
+For example 
+     lhs                             rhs                        support     confidence lift    
+[1]  {The Pilot's Wife : A Novel} => {Jewel}                    0.001053112 0.1707746  46.53761
+
+a suppport value of 0.001 for this rule means the "The Pilot's wife: Anovel" book appeared 0.1% of the bookbasket. A confidance of 0.17 for this rule implies that when "The Pilot's...." book was purchased 17% of the time "Jewel" book is also purchased. The lift of 46 measures "how much more likely an item is to be purchased relative to its typical purchase rate. 
+
+
+* The Pilot's Wife : A Novel
+* Jewel
+* Where The Heart Is
+* Midwives: A Novel
+* House of Sand and Fog
+* While I Was Gone
+* The Reader
+* Vinegar Hill
+* She's Come Undone
+* I Know This Much Is True
+* The Deep End of the Ocean
+* We Were the Mulvaneys
+* Here On Earth
+* The Book of Ruth
+* Drowning Ruth
+
+
+
+
+
+# Eximine and recommend other books (non bookclub list) to be placed on the cases for genric customers. 
+
+As per the book store manager requirements analysis should exclude *Girl with the Dragon Tattoo* and *Wild Animus* book series from the general recommendation. 
+
+
+### Exclude book list "The Girl with the Dragon Tattoo" series ref:https://en.wikipedia.org/wiki/Millennium_(novel_series)
+
+* The Girl with the Dragon Tattoo
+* The Girl Who Played with Fire
+* The Girl Who Kicked the Hornets' Nest
+* The Girl in the Spider's Web
+
+### Exclude “Wild Animus" series. 
+
+### Exclude Oprah's book club list that is already used and provided recommendation above
+ * Oprah_booktitles_sel
+
+
+
+### Combine all three exclusion into one list object
+
+```{r}
+# list
+#book_exclude <- list("The Girl with the Dragon Tattoo",
+#                     "The Girl Who Played with Fire",
+#                     "The Girl Who Kicked the Hornets' Nest",
+#                     "The Girl in the Spider's Web",
+#                     "Wild Animus")
+# The Girl with the Dragon Tattoo series book doesn not exist in the population 
+book_exclude <- list("Wild Animus")
+
+
+
+book_exclude_all <- append(book_exclude, Oprah_booktitles_sel)
+
+
+book_exclude_all
+
+```
+
+### Using default parameter settings 
+
+support = 0.1 (or 10%)
+confidence = 0.8 (or 80%)
+maxlen = maximum number of items in a rule. Default is 10.
+minlen = minimum number of items in a rule. Default is 1.
+
+Let's try the default parameter settings first.
+
+```{r}
+
+apriori(bookbaskets)
+
+```
+
+
+No rules were found with default settings. We will try again with some tweakings to the parameter settings.
+
+### Other books analysis 1: Using following parameter settings 
+
+support = 0.002 (or .2%)
+confidence = 0.5 (or 50%)
+maxlen = maximum number of items in a rule. Default is 10.
+minlen = minimum number of items in a rule. Default is 1.
+appearance with exclude book list
+
+
+```{r}
+
+#rm(bookotherrules)
+bookotherrules <- apriori(bookbaskets, parameter = list(support =
+                          0.002, confidence = 0.5, minlen = 1),
+                          appearance = list(none = c(book_exclude_all),
+                                            default="both")
+                          ) 
+
+
+```
+
+
+# Inspect the rules
+
+The result is a set of 24 association rules. The top ten rules with respect to the lift measure, a popular measure of rule strength, are:
+
+## Improving Performance
+
+Let's sort the rules by lift.
+
+
+```{r}
+
+inspect(head(sort(bookotherrules, by = "lift"),10))
+
+
+```
+
+
+### Strong Rules. Actionable Rules.
+
+A **strong** rule has both high support and confidence.
+
+An **actionable** rule is one you can act on.
+
+And now by lift and confidence.
+
+```{r}
+#inspect(head(sort(bookotherrules, by = c("lift", "confidence"),10)))
+
+bookotherrules_sorted <- sort(bookotherrules, by = c("lift", "confidence"))
+
+inspect(head(bookotherrules_sorted,10))
+
+```
+
+## Other Books Recommendation Results (1):
+
+For example 
+     lhs                                           rhs                                            support confidence     lift
+[1]  {Harry Potter and the Chamber of Secrets,                                                                               
+      Harry Potter and the Prisoner of Azkaban,                                                                              
+      Harry Potter and the Sorcerer's Stone}    => {Harry Potter and the Goblet of Fire}      0.002095366  0.8109244 191.5195
+      
+a support value of 0.002 for this rule means the "Harry Potter and the Chamber of Secrets", "Harry Potter and the Prisoner of Azkaban", and "Harry Potter and the Sorcerer's Stone" books appeared together 0.2% of the bookbasket. A confidence of 0.81 for this rule implies that when above three Harry Potter books were purchased 81% of the time "Harry Potter and the Goblet of Fire" book is also purchased. The lift of 191 measures "how much more likely an item is to be purchased relative to its typical purchase rate. 
+
+
+Similary rest of the above results can be explained.
+
+
+**Based on this analysis displaying the "Harry Potter" book series display together would be very appealing to some sections of the book shop customers. **
+
+* Harry Potter Series
+
+
+## Using arulesViz Package to Visualize the "Mined" Rules
+### Scatterplot
+
+```{r}
+library(arulesViz)
+
+# plot to visualize 
+plot(bookotherrules)
+
+```
+
+
+### Other books analysis 2: Using following parameter settings 
+
+support = 0.001 (or .2%)
+confidence = 0.5 (or 50%)
+maxlen = maximum number of items in a rule. Default is 10.
+minlen = minimum number of items in a rule. Default is 1.
+appearance with exclude book list
+
+
+```{r}
+
+#rm(bookotherrules)
+bookotherrules2 <- apriori(bookbaskets, parameter = list(support =
+                          0.001, confidence = 0.5, minlen = 1),
+                          appearance = list(none = c(book_exclude_all),
+                                            default="both")
+                          ) 
+
+```
+
+
+### Strong Rules. Actionable Rules.
+
+```{r}
+#inspect(head(sort(bookotherrules, by = c("lift", "confidence"),10)))
+
+bookotherrules2_sorted <- sort(bookotherrules2, by = c("lift", "confidence"))
+
+inspect(head(bookotherrules2_sorted,10))
+
+```
+
+## Other Books Recommendation Results (2):
+
+For example 
+     lhs                                       rhs                                        support confidence     lift
+[1]  {Soul Harvest: The World Takes Sides}  => {Apollyon: The Destroyer Is Unleashed} 0.001009684  0.7815126 580.5126
+      
+a support value of 0.001 for this rule means the "Soul Harvest: The World Takes Sides" book appeared 0.1% of the bookbasket. A confidence of 0.78 for this rule implies that when "Soul Harvest: The World Takes Sides" book was purchased 78% of the time "Apollyon: The Destroyer Is Unleashed" book is also purchased. The lift of 580 measures "how much more likely an item is to be purchased relative to its typical purchase rate. 
+
+
+Similary rest of the above results can be explained.
+
+
+**Based on this analysis displaying following book titles together would be very appealing to some sections of the book shop customers. **
+
+* Soul Harvest: The World Takes Sides
+* Apollyon: The Destroyer Is Unleashed
+* Key of Knowledge
+* Key of Valor
+* Key of Light
+* Nicolae: The Rise of Antichrist
+
+
+### Write the rules out to a CSV file to provide to the store manager for future reference. 
+
+```{r}
+
+# Other books results one 
+write(bookotherrules_sorted, file = "C:/Users/Jupiter/Downloads/RU/BIA6301ADM/Homework/submission/week4/ADM_Wekk4_Project/data/output/bookotherrules.csv",
+      sep = ",", quote = TRUE, row.names = FALSE)
+
+# Other books results two
+write(bookotherrules2_sorted, file = "C:/Users/Jupiter/Downloads/RU/BIA6301ADM/Homework/submission/week4/ADM_Wekk4_Project/data/output/bookotherrules2.csv",
+      sep = ",", quote = TRUE, row.names = FALSE)
+
+
+```
+
+
+
+### Recommendation to the store manager at Flourish and Blotts to increase sales and customer satisfaction. 
+
+
+* Design store display cases into four to five major sections, like "Best Selling Books", "Book Club Members Area", "Major Book Series", "Customer Recommendations" and "Seasonal Books". This provides clear layout and easy visibility and navigation to the customers and improve customer book browsing and buying experience. 
+
+
+* Based on the above analysis and recommendation stack above display cases with books preferred by each group of customers identified. This would increase additional book sales due to strategically placing additional books that customer would likely buy next to their preferred books or series. 
+
+
+* Add additional book types that are not currently sold at the book store, like text books to students, kids reading 
+books and gift ideas. This will bring in new customer segment to the book store and increase sales. 
+
+
+* Provide customers with price comparison and matching facility to compete with online bookstores and to increase customer retention. 
+
+
+
+
+
+

@@ -1,0 +1,25 @@
+"rules","support","confidence","lift"
+"{Harry Potter and the Chamber of Secrets,Harry Potter and the Prisoner of Azkaban,Harry Potter and the Sorcerer's Stone} => {Harry Potter and the Goblet of Fire}",0.00209536630911539,0.810924369747899,191.519543201896
+"{Harry Potter and the Chamber of Secrets,Harry Potter and the Goblet of Fire,Harry Potter and the Sorcerer's Stone} => {Harry Potter and the Prisoner of Azkaban}",0.00209536630911539,0.932367149758454,190.417901175059
+"{Harry Potter and the Chamber of Secrets,Harry Potter and the Goblet of Fire} => {Harry Potter and the Prisoner of Azkaban}",0.00238850045598645,0.897959183673469,183.390741662519
+"{Harry Potter and the Goblet of Fire,Harry Potter and the Sorcerer's Stone} => {Harry Potter and the Prisoner of Azkaban}",0.00217136405089677,0.892857142857143,182.348748812163
+"{Harry Potter and the Chamber of Secrets,Harry Potter and the Prisoner of Azkaban} => {Harry Potter and the Goblet of Fire}",0.00238850045598645,0.771929824561403,182.310031488979
+"{Harry Potter and the Prisoner of Azkaban,Harry Potter and the Sorcerer's Stone} => {Harry Potter and the Goblet of Fire}",0.00217136405089677,0.75187969924812,177.574705995759
+"{Harry Potter and the Goblet of Fire,Harry Potter and the Prisoner of Azkaban,Harry Potter and the Sorcerer's Stone} => {Harry Potter and the Chamber of Secrets}",0.00209536630911539,0.965,158.156975088968
+"{Harry Potter and the Goblet of Fire,Harry Potter and the Sorcerer's Stone} => {Harry Potter and the Chamber of Secrets}",0.00224736179267816,0.924107142857143,151.454912303
+"{Harry Potter and the Prisoner of Azkaban,Harry Potter and the Sorcerer's Stone} => {Harry Potter and the Chamber of Secrets}",0.00258392322056716,0.894736842105263,146.641318598989
+"{Harry Potter and the Goblet of Fire,Harry Potter and the Prisoner of Azkaban} => {Harry Potter and the Chamber of Secrets}",0.00238850045598645,0.883534136546185,144.805270905687
+"{Harry Potter and the Chamber of Secrets,Harry Potter and the Sorcerer's Stone} => {Harry Potter and the Goblet of Fire}",0.00224736179267816,0.603498542274053,142.530881363534
+"{Harry Potter and the Chamber of Secrets,Harry Potter and the Sorcerer's Stone} => {Harry Potter and the Prisoner of Azkaban}",0.00258392322056716,0.693877551020408,141.71102764831
+"{Harry Potter and the Prisoner of Azkaban} => {Harry Potter and the Goblet of Fire}",0.00270334824336648,0.552106430155211,130.393382227529
+"{Harry Potter and the Goblet of Fire} => {Harry Potter and the Prisoner of Azkaban}",0.00270334824336648,0.638461538461538,130.393382227529
+"{Harry Potter and the Prisoner of Azkaban} => {Harry Potter and the Chamber of Secrets}",0.0030941937725279,0.631929046563193,103.568897901855
+"{Harry Potter and the Chamber of Secrets} => {Harry Potter and the Prisoner of Azkaban}",0.0030941937725279,0.50711743772242,103.568897901855
+"{Harry Potter and the Goblet of Fire} => {Harry Potter and the Chamber of Secrets}",0.00265992096234855,0.628205128205128,102.958572862487
+"{Harry Potter and the Chamber of Secrets,Harry Potter and the Goblet of Fire,Harry Potter and the Prisoner of Azkaban} => {Harry Potter and the Sorcerer's Stone}",0.00209536630911539,0.877272727272727,97.1199956293706
+"{Harry Potter and the Chamber of Secrets,Harry Potter and the Goblet of Fire} => {Harry Potter and the Sorcerer's Stone}",0.00224736179267816,0.844897959183673,93.5358908948195
+"{Harry Potter and the Chamber of Secrets,Harry Potter and the Prisoner of Azkaban} => {Harry Potter and the Sorcerer's Stone}",0.00258392322056716,0.835087719298246,92.4498313090419
+"{Harry Potter and the Goblet of Fire,Harry Potter and the Prisoner of Azkaban} => {Harry Potter and the Sorcerer's Stone}",0.00217136405089677,0.803212851405622,88.9210688909484
+"{Harry Potter and the Chamber of Secrets} => {Harry Potter and the Sorcerer's Stone}",0.00372388934728797,0.610320284697509,67.5665634410074
+"{Harry Potter and the Prisoner of Azkaban} => {Harry Potter and the Sorcerer's Stone}",0.00288791418769271,0.58980044345898,65.2948789015862
+"{Harry Potter and the Goblet of Fire} => {Harry Potter and the Sorcerer's Stone}",0.00243192773700439,0.574358974358974,63.5854043392505
